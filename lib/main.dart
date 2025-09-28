@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:milestoneradio/screens/about_screen.dart';
 import 'package:provider/provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
@@ -49,6 +50,7 @@ class MilestoneRadioApp extends StatelessWidget {
           '/radio': (context) => const RadioScreen(),
           '/articles': (context) => const ArticlesScreen(),
           '/admin': (context) => const AdminScreen(),
+           '/about': (context) => const AboutScreen(),
         },
         debugShowCheckedModeBanner: false,
       ),
