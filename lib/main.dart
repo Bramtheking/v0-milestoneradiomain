@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:milestoneradio/screens/about_screen.dart';
 import 'package:provider/provider.dart';
 import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/radio_screen.dart';
 import 'screens/articles_screen.dart';
+import 'screens/about_screen.dart';
 import 'screens/admin_screen.dart';
 import 'providers/auth_provider.dart';
 import 'providers/article_provider.dart';
@@ -47,10 +46,10 @@ class MilestoneRadioApp extends StatelessWidget {
         home: const SplashScreen(),
         routes: {
           '/home': (context) => const HomeScreen(),
-          '/radio': (context) => const RadioScreen(),
           '/articles': (context) => const ArticlesScreen(),
+          '/about': (context) => const AboutScreen(),
           '/admin': (context) => const AdminScreen(),
-           '/about': (context) => const AboutScreen(),
+          // Removed '/radio' route since it's now embedded in HomeScreen
         },
         debugShowCheckedModeBanner: false,
       ),

@@ -4,44 +4,15 @@ import '../utils/theme.dart';
 import '../widgets/live_indicator.dart';
 import '../widgets/click_to_play_instructions.dart';
 
-class RadioScreen extends StatefulWidget {
-  const RadioScreen({super.key});
+class RadioScreen extends StatelessWidget {
+  final WebViewController webViewController;
+  final bool isLoading;
 
-  @override
-  State<RadioScreen> createState() => _RadioScreenState();
-}
-
-class _RadioScreenState extends State<RadioScreen> {
-  late WebViewController _webViewController;
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeWebView();
-  }
-
-  void _initializeWebView() {
-    _webViewController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onPageStarted: (String url) {
-            setState(() {
-              _isLoading = true;
-            });
-          },
-          onPageFinished: (String url) {
-            setState(() {
-              _isLoading = false;
-            });
-          },
-        ),
-      )
-      ..loadRequest(
-        Uri.parse('https://a4.asurahosting.com/public/milestone/embed?theme=light'),
-      );
-  }
+  const RadioScreen({
+    super.key,
+    required this.webViewController,
+    required this.isLoading,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +54,7 @@ class _RadioScreenState extends State<RadioScreen> {
             const SizedBox(height: 20),
             
             Container(
-              height: 400,
+              height: 150,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
@@ -98,8 +69,8 @@ class _RadioScreenState extends State<RadioScreen> {
                 borderRadius: BorderRadius.circular(20),
                 child: Stack(
                   children: [
-                    WebViewWidget(controller: _webViewController),
-                    if (_isLoading)
+                    WebViewWidget(controller: webViewController),
+                    if (isLoading)
                       Container(
                         color: Colors.white,
                         child: const Center(

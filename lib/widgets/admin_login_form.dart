@@ -15,6 +15,7 @@ class _AdminLoginFormState extends State<AdminLoginForm> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -67,6 +68,64 @@ class _AdminLoginFormState extends State<AdminLoginForm> {
                   ),
                   const SizedBox(height: 30),
                   
+                  // Show detailed error message if any
+                  if (_errorMessage != null)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 20),
+                      decoration: BoxDecoration(
+                        color: AppTheme.milestoneRed.withOpacity(0.1),
+                        border: Border.all(color: AppTheme.milestoneRed.withOpacity(0.3)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            color: AppTheme.milestoneRed,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Login Error:',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.milestoneRed,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _errorMessage!,
+                                  style: const TextStyle(
+                                    color: AppTheme.milestoneRed,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _errorMessage = null;
+                              });
+                            },
+                            icon: const Icon(
+                              Icons.close,
+                              size: 18,
+                              color: AppTheme.milestoneRed,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  
                   TextFormField(
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
@@ -89,6 +148,14 @@ class _AdminLoginFormState extends State<AdminLoginForm> {
                         return 'Please enter a valid email';
                       }
                       return null;
+                    },
+                    onChanged: (value) {
+                      // Clear error when user starts typing
+                      if (_errorMessage != null) {
+                        setState(() {
+                          _errorMessage = null;
+                        });
+                      }
                     },
                   ),
                   const SizedBox(height: 20),
@@ -126,6 +193,14 @@ class _AdminLoginFormState extends State<AdminLoginForm> {
                       }
                       return null;
                     },
+                    onChanged: (value) {
+                      // Clear error when user starts typing
+                      if (_errorMessage != null) {
+                        setState(() {
+                          _errorMessage = null;
+                        });
+                      }
+                    },
                   ),
                   const SizedBox(height: 30),
                   
@@ -158,6 +233,8 @@ class _AdminLoginFormState extends State<AdminLoginForm> {
                       );
                     },
                   ),
+                  
+
                 ],
               ),
             ),
@@ -169,19 +246,42 @@ class _AdminLoginFormState extends State<AdminLoginForm> {
 
   void _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      final authProvider = context.read<AuthProvider>();
-      final success = await authProvider.signIn(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
+      setState(() {
+        _errorMessage = null; // Clear previous errors
+      });
       
-      if (!success && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login failed. Please check your credentials.'),
-            backgroundColor: AppTheme.milestoneRed,
-          ),
+      final authProvider = context.read<AuthProvider>();
+      
+      try {
+        final success = await authProvider.signIn(
+          _emailController.text.trim(),
+          _passwordController.text,
         );
+        
+        if (!success && mounted) {
+          // Get the actual error from the auth provider
+          setState(() {
+            _errorMessage = authProvider.errorMessage ?? 'Unknown error occurred during sign in';
+          });
+          
+          // Also show in console for debugging
+          print('=== LOGIN DEBUG INFO ===');
+          print('Email: ${_emailController.text.trim()}');
+          print('Password Length: ${_passwordController.text.length}');
+          print('Error: ${authProvider.errorMessage}');
+          print('=====================');
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _errorMessage = 'Unexpected error: ${e.toString()}';
+          });
+          
+          // Debug print
+          print('=== CATCH BLOCK ERROR ===');
+          print('Exception: $e');
+          print('========================');
+        }
       }
     }
   }
