@@ -11,7 +11,7 @@ class AuthProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _user != null;
-  bool get isAdmin => _user?.email == 'admin@milestoneradio.com';
+  bool get isAdmin => _user != null; // Any authenticated user is admin
 
   AuthProvider() {
     _auth.authStateChanges().listen((User? user) {
