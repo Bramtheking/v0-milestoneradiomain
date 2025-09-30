@@ -15,6 +15,7 @@ class ArticlesScreen extends StatefulWidget {
 
 class _ArticlesScreenState extends State<ArticlesScreen> {
   String _selectedCategory = 'All';
+  String _searchQuery = '';
   final List<String> _categories = ['All', 'Education', 'Community', 'News', 'Events'];
 
   @override
@@ -111,11 +112,21 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
                   );
                 }
                 
-                final filteredArticles = _selectedCategory == 'All'
+                var filteredArticles = _selectedCategory == 'All'
                     ? articleProvider.articles
                     : articleProvider.articles
                         .where((article) => article.category == _selectedCategory)
                         .toList();
+                
+                if (_searchQuery.isNotEmpty) {
+                  filteredArticles = filteredArticles.where((article) {
+                    final query = _searchQuery.toLowerCase();
+                    return article.title.toLowerCase().contains(query) ||
+                           article.excerpt.toLowerCase().contains(query) ||
+                           article.content.toLowerCase().contains(query) ||
+                           article.author.toLowerCase().contains(query);
+                  }).toList();
+                }
                 
                 if (filteredArticles.isEmpty) {
                   return Center(
@@ -299,23 +310,50 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
   }
 
   void _showSearchDialog() {
+    final TextEditingController searchController = TextEditingController(text: _searchQuery);
+    
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Search Articles'),
-        content: const TextField(
-          decoration: InputDecoration(
+        content: TextField(
+          controller: searchController,
+          decoration: const InputDecoration(
             hintText: 'Enter search terms...',
             prefixIcon: Icon(Icons.search),
           ),
+          autofocus: true,
+          onSubmitted: (value) {
+            setState(() {
+              _searchQuery = value.trim();
+            });
+            Navigator.pop(context);
+          },
         ),
         actions: [
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _searchQuery = '';
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('Clear'),
+          ),
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              setState(() {
+                _searchQuery = searchController.text.trim();
+              });
+              Navigator.pop(context);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.milestoneBlue,
+            ),
             child: const Text('Search'),
           ),
         ],

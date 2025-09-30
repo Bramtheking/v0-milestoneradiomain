@@ -211,7 +211,54 @@ class AboutScreen extends StatelessWidget {
                   const SizedBox(height: 15),
                   
                   InkWell(
-                    onTap: () => _launchURL('https://milestoneinstitute.ac.ke'),
+                    onTap: () => _launchURL('tel:0712403409'),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.phone,
+                            color: AppTheme.milestoneBlue,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Main Campus - Thika',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.milestoneNavy,
+                                  ),
+                                ),
+                                Text(
+                                  '0712 403 409 / 0722 972 438',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(
+                            Icons.arrow_forward_ios,
+                            size: 16,
+                            color: Colors.grey,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  const Divider(height: 20),
+                  
+                  InkWell(
+                    onTap: () => _launchURL('https://www.milestoneinstitute.ac.ke'),
                     borderRadius: BorderRadius.circular(8),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -236,7 +283,7 @@ class AboutScreen extends StatelessWidget {
                                   ),
                                 ),
                                 Text(
-                                  'milestoneinstitute.ac.ke',
+                                  'www.milestoneinstitute.ac.ke',
                                   style: TextStyle(
                                     fontSize: 13,
                                     color: Colors.grey,
@@ -301,6 +348,24 @@ class AboutScreen extends StatelessWidget {
                       ),
                     ),
                   ),
+                  
+                  const Divider(height: 20),
+                  
+                  const Text(
+                    'Other Campuses:',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.milestoneNavy,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  
+                  _buildCampusContactItem('Nairobi', '0796 553 553'),
+                  _buildCampusContactItem('Mombasa', '0797 585 594'),
+                  _buildCampusContactItem('Nakuru', '0769 358 606'),
+                  _buildCampusContactItem('Eldoret', '0790 553 553'),
+                  _buildCampusContactItem('Kisumu', '0713 535 565'),
                 ],
               ),
             ),
@@ -462,6 +527,49 @@ class AboutScreen extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCampusContactItem(String campus, String phone) {
+    return InkWell(
+      onTap: () => _launchURL('tel:${phone.replaceAll(' ', '')}'),
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.location_city,
+              color: AppTheme.milestoneBlue,
+              size: 16,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                campus,
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.milestoneNavy,
+                ),
+              ),
+            ),
+            Text(
+              phone,
+              style: const TextStyle(
+                fontSize: 13,
+                color: Colors.grey,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 12,
+              color: Colors.grey,
+            ),
+          ],
+        ),
       ),
     );
   }

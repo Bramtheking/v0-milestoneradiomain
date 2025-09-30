@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../models/article.dart';
 import '../providers/article_provider.dart';
 import '../utils/theme.dart';
@@ -27,6 +30,7 @@ class _ArticleEditorScreenState extends State<ArticleEditorScreen> {
   String _selectedCategory = 'Education';
   String _featuredImageUrl = '';
   bool _isLoading = false;
+  bool _isUploadingImage = false;
 
   final List<String> _categories = ['Education', 'Community', 'News', 'Events'];
 
@@ -106,43 +110,94 @@ class _ArticleEditorScreenState extends State<ArticleEditorScreen> {
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.grey.shade300),
                 ),
-                child: _featuredImageUrl.isNotEmpty
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          _featuredImageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Center(
-                              child: Icon(Icons.error, color: Colors.red),
-                            );
-                          },
+                child: _isUploadingImage
+                    ? const Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(AppTheme.milestoneBlue),
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              'Uploading image...',
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ],
                         ),
                       )
-                    : InkWell(
-                        onTap: _pickImage,
-                        borderRadius: BorderRadius.circular(12),
-                        child: const Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                    : _featuredImageUrl.isNotEmpty
+                        ? Stack(
                             children: [
-                              Icon(
-                                Icons.add_photo_alternate,
-                                size: 48,
-                                color: Colors.grey,
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.network(
+                                  _featuredImageUrl,
+                                  width: double.infinity,
+                                  height: 200,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Center(
+                                      child: Icon(Icons.error, color: Colors.red),
+                                    );
+                                  },
+                                ),
                               ),
-                              SizedBox(height: 10),
-                              Text(
-                                'Tap to add featured image',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 16,
+                              Positioned(
+                                top: 8,
+                                right: 8,
+                                child: Row(
+                                  children: [
+                                    IconButton(
+                                      onPressed: _pickImage,
+                                      icon: const Icon(Icons.edit),
+                                      style: IconButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: AppTheme.milestoneBlue,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    IconButton(
+                                      onPressed: () {
+                                        setState(() {
+                                          _featuredImageUrl = '';
+                                        });
+                                      },
+                                      icon: const Icon(Icons.delete),
+                                      style: IconButton.styleFrom(
+                                        backgroundColor: Colors.white,
+                                        foregroundColor: AppTheme.milestoneRed,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
+                          )
+                        : InkWell(
+                            onTap: _pickImage,
+                            borderRadius: BorderRadius.circular(12),
+                            child: const Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.add_photo_alternate,
+                                    size: 48,
+                                    color: Colors.grey,
+                                  ),
+                                  SizedBox(height: 10),
+                                  Text(
+                                    'Tap to add featured image',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
               ),
               const SizedBox(height: 30),
               
@@ -275,14 +330,88 @@ class _ArticleEditorScreenState extends State<ArticleEditorScreen> {
 
   void _pickImage() async {
     final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1920,
+      maxHeight: 1080,
+      imageQuality: 85,
+    );
     
     if (image != null) {
-      // In a real app, you would upload to Cloudinary here
-      // For now, we'll use a placeholder
       setState(() {
-        _featuredImageUrl = 'https://via.placeholder.com/400x200';
+        _isUploadingImage = true;
       });
+
+      try {
+        final uploadedUrl = await _uploadToCloudinary(File(image.path));
+        if (uploadedUrl != null) {
+          setState(() {
+            _featuredImageUrl = uploadedUrl;
+            _isUploadingImage = false;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Image uploaded successfully!'),
+                backgroundColor: AppTheme.milestoneBlue,
+              ),
+            );
+          }
+        } else {
+          setState(() {
+            _isUploadingImage = false;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Failed to upload image. Please try again.'),
+                backgroundColor: AppTheme.milestoneRed,
+              ),
+            );
+          }
+        }
+      } catch (e) {
+        setState(() {
+          _isUploadingImage = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error uploading image: ${e.toString()}'),
+              backgroundColor: AppTheme.milestoneRed,
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  Future<String?> _uploadToCloudinary(File imageFile) async {
+    try {
+      const cloudName = 'YOUR_CLOUD_NAME';
+      const uploadPreset = 'YOUR_UPLOAD_PRESET';
+      
+      final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
+      
+      final request = http.MultipartRequest('POST', url)
+        ..fields['upload_preset'] = uploadPreset
+        ..fields['folder'] = 'milestone_radio'
+        ..files.add(await http.MultipartFile.fromPath('file', imageFile.path));
+      
+      final response = await request.send();
+      
+      if (response.statusCode == 200) {
+        final responseData = await response.stream.toBytes();
+        final responseString = String.fromCharCodes(responseData);
+        final jsonMap = json.decode(responseString);
+        return jsonMap['secure_url'];
+      } else {
+        print('Cloudinary upload failed with status: ${response.statusCode}');
+        return null;
+      }
+    } catch (e) {
+      print('Error uploading to Cloudinary: $e');
+      return null;
     }
   }
 
