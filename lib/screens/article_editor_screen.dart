@@ -388,8 +388,8 @@ class _ArticleEditorScreenState extends State<ArticleEditorScreen> {
 
   Future<String?> _uploadToCloudinary(File imageFile) async {
     try {
-      const cloudName = 'YOUR_CLOUD_NAME';
-      const uploadPreset = 'YOUR_UPLOAD_PRESET';
+      const cloudName = 'dsrj21orp';
+      const uploadPreset = 'milestone_unsigned';
       
       final url = Uri.parse('https://api.cloudinary.com/v1_1/$cloudName/image/upload');
       
